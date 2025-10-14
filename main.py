@@ -1,18 +1,21 @@
-from telegram import Update, ReplyKeyboardMarkup
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, MessageHandler, filters
 
 TOKEN = "7935629099:AAGOW4HQ5FoCm_kQl0CYuyk1rDbcEXbtSWQ"
 
 # Start command
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    menu_buttons = [
-        ["📊 GoldenLinePro", "🧠 IntelBox"],
-        ["🎓 Education", "📬 Subscription"],
-        ["🌐 Language", "📚 Tutorial"],
-        ["🆘 Help", "⚙️ Settings"]
+    keyboard = [
+        [InlineKeyboardButton("📊 GoldenLinePro", callback_data="goldenlinepro"),
+         InlineKeyboardButton("🧠 IntelBox", callback_data="intelbox")],
+        [InlineKeyboardButton("🎓 Education", callback_data="education"),
+         InlineKeyboardButton("📬 Subscription", callback_data="subscription")],
+        [InlineKeyboardButton("🌐 Language", callback_data="language"),
+         InlineKeyboardButton("📚 Tutorial", callback_data="tutorial")],
+        [InlineKeyboardButton("🆘 Help", callback_data="help"),
+         InlineKeyboardButton("⚙️ Settings", callback_data="settings")]
     ]
-
-    reply_markup = ReplyKeyboardMarkup(menu_buttons, resize_keyboard=True)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
     welcome_message = (
         "🤖 Welcome to *Golden Line Pro* – Powered by ChiefHanOfficial 🚀\n\n"
@@ -28,31 +31,33 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(welcome_message, parse_mode="Markdown", reply_markup=reply_markup)
 
-# Response handler
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = update.message.text.lower()
+# Callback button handler
+async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    data = query.data
 
-    if "goldenlinepro" in text:
-        await update.message.reply_text("📊 Radar aktif... Menganalisa pasaran semasa 📈")
-    elif "intelbox" in text:
-        await update.message.reply_text("🧠 Membuka Golden Line IntelBox... Menganalisa setup 🔍")
-    elif "education" in text:
-        await update.message.reply_text("🎓 Akses modul pembelajaran Golden Line Setup 💡")
-    elif "subscription" in text:
-        await update.message.reply_text("💼 Status akaun: *ACTIVE (Free Beta)* 🚀", parse_mode="Markdown")
-    elif "language" in text:
-        await update.message.reply_text("🌐 Pilih bahasa: English / Bahasa Melayu")
-    elif "tutorial" in text:
-        await update.message.reply_text("📚 Tutorial penggunaan: Tekan /help untuk panduan penuh 📖")
-    elif "help" in text:
-        await update.message.reply_text("🆘 Arahan: Tekan /start semula untuk reset menu atau hubungi @ChiefHanOfficialSupport")
-    elif "settings" in text:
-        await update.message.reply_text("⚙️ Settings belum aktif dalam versi ini. Stay tuned 🔧")
-    else:
-        await update.message.reply_text("❌ Arahan tidak dikenali. Tekan /start semula untuk reset menu.")
+    if data == "goldenlinepro":
+        await query.edit_message_text("📊 Radar aktif... Menganalisa pasaran semasa 📈")
+    elif data == "intelbox":
+        await query.edit_message_text("🧠 Membuka Golden Line IntelBox... Menganalisa setup 🔍")
+    elif data == "education":
+        await query.edit_message_text("🎓 Akses modul pembelajaran Golden Line Setup 💡")
+    elif data == "subscription":
+        await query.edit_message_text("💼 Status akaun: *ACTIVE (Free Beta)* 🚀", parse_mode="Markdown")
+    elif data == "language":
+        await query.edit_message_text("🌐 Pilih bahasa: English / Bahasa Melayu")
+    elif data == "tutorial":
+        await query.edit_message_text("📚 Tutorial penggunaan: Tekan /help untuk panduan penuh 📖")
+    elif data == "help":
+        await query.edit_message_text("🆘 Arahan: Tekan /start semula untuk reset menu atau hubungi @ChiefHanOfficialSupport")
+    elif data == "settings":
+        await query.edit_message_text("⚙️ Settings belum aktif dalam versi ini. Stay tuned 🔧")
 
 # Main app
 app = ApplicationBuilder().token(TOKEN).build()
 app.add_handler(CommandHandler("start", start))
-app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, start))
+from telegram.ext import CallbackQueryHandler
+app.add_handler(CallbackQueryHandler(button))
 app.run_polling()
