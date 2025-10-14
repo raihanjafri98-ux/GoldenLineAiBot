@@ -5,16 +5,14 @@ TOKEN = "7935629099:AAGOW4HQ5FoCm_kQl0CYuyk1rDbcEXbtSWQ"
 
 # Start command
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    from telegram import ReplyKeyboardMarkup
+    menu_buttons = [
+        ["📊 GoldenLinePro", "🧠 IntelBox"],
+        ["🎓 Education", "📬 Subscription"],
+        ["🌐 Language", "📚 Tutorial"],
+        ["🆘 Help", "⚙️ Settings"]
+    ]
 
-menu_buttons = [
-    ["📊 GoldenLinePro", "🧠 IntelBox"],
-    ["🎓 Education", "📬 Subscription"],
-    ["🌐 Language", "📚 Tutorial"],
-    ["🆘 Help", "⚙️ Settings"]
-]
-
-reply_markup = ReplyKeyboardMarkup(menu_buttons, resize_keyboard=True)
+    reply_markup = ReplyKeyboardMarkup(menu_buttons, resize_keyboard=True)
 
     welcome_message = (
         "🤖 Welcome to *Golden Line Pro* – Powered by ChiefHanOfficial 🚀\n\n"
@@ -27,6 +25,7 @@ reply_markup = ReplyKeyboardMarkup(menu_buttons, resize_keyboard=True)
         "• 🆘 *Support & Tutorial* – Access help anytime directly from ChiefHanOfficial\n\n"
         "Ready to master the market with confidence?\n👉 Choose your action below:"
     )
+
     await update.message.reply_text(welcome_message, parse_mode="Markdown", reply_markup=reply_markup)
 
 # Response handler
