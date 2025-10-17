@@ -1,26 +1,35 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, CallbackQueryHandler
-import os
+from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
+import json, os
 
 TOKEN = os.getenv("TELEGRAM_TOKEN", "7935629099:AAGOW4HQ5FoCm_kQl0CYuyk1rDbcEXbtSWQ")
+DATA_FILE = "active_users.json"
+
+# === Save active users ===
+def save_active_users(data):
+    with open(DATA_FILE, "w") as f:
+        json.dump(data, f)
+
+def load_active_users():
+    if os.path.exists(DATA_FILE):
+        with open(DATA_FILE, "r") as f:
+            return json.load(f)
+    return {}
 
 # === START MENU ===
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
-        [InlineKeyboardButton("📊 Golden Line Pro", callback_data="goldenline_menu")],
-        [InlineKeyboardButton("🗺️ Mapping Pro", callback_data="mapping_pro")],
+        [InlineKeyboardButton("💛 Golden Line Pro", callback_data="goldenline_menu")],
+        [InlineKeyboardButton("🧠 Mapping Pro", callback_data="mapping_pro")],
         [InlineKeyboardButton("🎓 Education", callback_data="education")],
-        [InlineKeyboardButton("💼 Subscription", callback_data="subscription")],
-        [InlineKeyboardButton("📘 Tutorial", callback_data="tutorial")],
+        [InlineKeyboardButton("📘 Subscription", callback_data="subscription")],
+        [InlineKeyboardButton("📚 Tutorial", callback_data="tutorial")],
         [InlineKeyboardButton("🌐 Language", callback_data="language")]
     ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-
     await update.message.reply_text(
-        "🤖 *Welcome to ChiefHanOfficial AI Bot*\n\n"
-        "Sila pilih menu di bawah untuk mula 🚀",
+        "🤖 *Welcome to ChiefHanOfficial AI Bot*\n\nPilih menu di bawah untuk mula 📊",
         parse_mode="Markdown",
-        reply_markup=reply_markup
+        reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
 # === CALLBACK HANDLER ===
@@ -29,69 +38,68 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
     data = query.data
 
-    # === Golden Line Pro ===
+    users = load_active_users()
+
+    # --- Golden Line Pro Menu ---
     if data == "goldenline_menu":
         submenu = [
-            [InlineKeyboardButton("📡 GoldenLine Signal AI Pro", callback_data="signal_pro")],
+            [InlineKeyboardButton("🪙 XAU/USD", callback_data="pair_xauusd")],
+            [InlineKeyboardButton("🛢️ WTI/USD", callback_data="pair_wtiusd")],
             [InlineKeyboardButton("⬅️ Back", callback_data="back_main")]
         ]
         await query.edit_message_text(
-            text="📊 *Golden Line Pro*\n\nPilih fungsi di bawah:",
+            "🟡 *GoldenLine Signal AI Pro*\nPilih pair untuk mula analisis 👇",
             parse_mode="Markdown",
             reply_markup=InlineKeyboardMarkup(submenu)
         )
 
-    # === Mapping Pro ===
-    elif data == "mapping_pro":
-        await query.edit_message_text(
-            text="🗺️ *Mapping Pro*\n\nFungsi analisa struktur pasaran akan datang 🚧",
-            parse_mode="Markdown"
-        )
-
-    # === Education ===
-    elif data == "education":
-        await query.edit_message_text(
-            text="🎓 *Education Center*\n\nModul latihan & eBook akan dimuat naik tidak lama lagi 📘",
-            parse_mode="Markdown"
-        )
-
-    # === Subscription ===
-    elif data == "subscription":
-        await query.edit_message_text(
-            text="💼 *Subscription Status*\n\nAkaun anda: *ACTIVE (Free Beta)* 🚀\n\n"
-                 "Hubungi admin untuk naik taraf akaun premium 🔑",
-            parse_mode="Markdown"
-        )
-
-    # === Tutorial ===
-    elif data == "tutorial":
-        await query.edit_message_text(
-            text="📘 *Tutorial Guide*\n\n1️⃣ Cara guna GoldenLine Pro\n2️⃣ Setup SOP Entry\n3️⃣ Mapping & Market Phase\n\n"
-                 "📺 Video guide & modul akan dikemaskini kemudian.",
-            parse_mode="Markdown"
-        )
-
-    # === Language ===
-    elif data == "language":
-        lang_menu = [
-            [InlineKeyboardButton("🇲🇾 Bahasa Melayu", callback_data="lang_ms")],
-            [InlineKeyboardButton("🇬🇧 English", callback_data="lang_en")],
-            [InlineKeyboardButton("⬅️ Back", callback_data="back_main")]
+    # --- Pair Menu ---
+    elif data.startswith("pair_"):
+        pair = data.split("_")[1].upper()
+        submenu = [
+            [InlineKeyboardButton("⏱ M15", callback_data=f"{pair}_M15")],
+            [InlineKeyboardButton("⏱ M30", callback_data=f"{pair}_M30")],
+            [InlineKeyboardButton("⏱ H1", callback_data=f"{pair}_H1")],
+            [InlineKeyboardButton("⬅️ Back", callback_data="goldenline_menu")]
         ]
         await query.edit_message_text(
-            text="🌐 *Pilih Bahasa / Choose Language:*",
+            f"📊 *Selected Pair:* {pair}\n\nPilih timeframe untuk signal analisis 👇",
             parse_mode="Markdown",
-            reply_markup=InlineKeyboardMarkup(lang_menu)
+            reply_markup=InlineKeyboardMarkup(submenu)
         )
 
-    # === Back to Main Menu ===
+    # --- Timeframe selected ---
+    elif "_" in data:
+        pair, tf = data.split("_")
+        chat_id = str(query.message.chat_id)
+        users[chat_id] = {"pair": pair, "tf": tf, "active": True}
+        save_active_users(users)
+
+        await query.edit_message_text(
+            f"✅ *Signal Active Mode ON*\nPair: {pair}\nTimeframe: {tf}\n\nMenunggu signal real-time...",
+            parse_mode="Markdown",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("❌ Stop Signal", callback_data="stop_signal")],
+                [InlineKeyboardButton("🏠 Home", callback_data="back_main")]
+            ])
+        )
+
+    elif data == "stop_signal":
+        chat_id = str(query.message.chat_id)
+        users.pop(chat_id, None)
+        save_active_users(users)
+        await query.edit_message_text(
+            "🛑 Signal dihentikan.\nKembali ke menu utama untuk sambung semula.",
+            parse_mode="Markdown",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🏠 Home", callback_data="back_main")]])
+        )
+
     elif data == "back_main":
         await start(update, context)
 
-# === MAIN APP ===
-app = ApplicationBuilder().token(TOKEN).build()
-app.add_handler(CommandHandler("start", start))
-app.add_handler(CallbackQueryHandler(button_callback))
-
+# === RUN BOT ===
 if __name__ == "__main__":
+    app = ApplicationBuilder().token(TOKEN).build()
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CallbackQueryHandler(button_callback))
     app.run_polling()
