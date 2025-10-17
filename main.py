@@ -3,7 +3,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, Callb
 import os
 
 # === TOKEN BOT TELEGRAM ===
-TOKEN = os.getenv("TELEGRAM_TOKEN", "7935629909:AAGOW4HQ5FoCm_kq1QCVuyk1rDbcEXbtSWd")
+TOKEN = os.getenv("TELEGRAM_TOKEN", "7935629099:AAGOW4HQ5FoCm_kQl0CYuyk1rDbcEXbtSWQ")
 
 # === MENU UTAMA ===
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
