@@ -1,35 +1,36 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
-import json, os
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, CallbackQueryHandler
+import os
 
-TOKEN = os.getenv("TELEGRAM_TOKEN", "7935629099:AAGOW4HQ5FoCm_kQl0CYuyk1rDbcEXbtSWQ")
-DATA_FILE = "active_users.json"
+# === TOKEN BOT TELEGRAM ===
+TOKEN = os.getenv("TELEGRAM_TOKEN", "7935629909:AAGOW4HQ5FoCm_kq1QCVuyk1rDbcEXbtSWd")
 
-# === Save active users ===
-def save_active_users(data):
-    with open(DATA_FILE, "w") as f:
-        json.dump(data, f)
-
-def load_active_users():
-    if os.path.exists(DATA_FILE):
-        with open(DATA_FILE, "r") as f:
-            return json.load(f)
-    return {}
-
-# === START MENU ===
+# === MENU UTAMA ===
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
-        [InlineKeyboardButton("💛 Golden Line Pro", callback_data="goldenline_menu")],
-        [InlineKeyboardButton("🧠 Mapping Pro", callback_data="mapping_pro")],
-        [InlineKeyboardButton("🎓 Education", callback_data="education")],
-        [InlineKeyboardButton("📘 Subscription", callback_data="subscription")],
-        [InlineKeyboardButton("📚 Tutorial", callback_data="tutorial")],
-        [InlineKeyboardButton("🌐 Language", callback_data="language")]
+        [InlineKeyboardButton("📊 Golden Line Pro", callback_data="goldenline_menu"),
+         InlineKeyboardButton("🧭 Mapping Pro", callback_data="mapping_pro")],
+        [InlineKeyboardButton("🎓 Education", callback_data="education"),
+         InlineKeyboardButton("📘 Subscription", callback_data="subscription")],
+        [InlineKeyboardButton("📚 Tutorial", callback_data="tutorial"),
+         InlineKeyboardButton("🌐 Language", callback_data="language")]
     ]
+
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    welcome_text = (
+        "🤖 *Welcome to Golden Line AI Pro*\n\n"
+        "Selamat datang ke platform rasmi Golden Line Team.\n\n"
+        "📊 Signal Real-Time\n"
+        "🧭 Mapping Analisis Harian\n"
+        "🎓 Modul Pembelajaran & Tutorial Lengkap\n\n"
+        "Sila pilih menu di bawah untuk mula menggunakan sistem ini 🔽"
+    )
+
     await update.message.reply_text(
-        "🤖 *Welcome to ChiefHanOfficial AI Bot*\n\nPilih menu di bawah untuk mula 📊",
+        welcome_text,
         parse_mode="Markdown",
-        reply_markup=InlineKeyboardMarkup(keyboard)
+        reply_markup=reply_markup
     )
 
 # === CALLBACK HANDLER ===
@@ -38,68 +39,117 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
     data = query.data
 
-    users = load_active_users()
-
-    # --- Golden Line Pro Menu ---
+    # === MENU GOLDEN LINE PRO ===
     if data == "goldenline_menu":
         submenu = [
-            [InlineKeyboardButton("🪙 XAU/USD", callback_data="pair_xauusd")],
-            [InlineKeyboardButton("🛢️ WTI/USD", callback_data="pair_wtiusd")],
-            [InlineKeyboardButton("⬅️ Back", callback_data="back_main")]
+            [InlineKeyboardButton("🪙 XAU/USD", callback_data="xauusd")],
+            [InlineKeyboardButton("🛢️ WTI", callback_data="wti")],
+            [InlineKeyboardButton("🏠 Back", callback_data="back_main")]
         ]
         await query.edit_message_text(
-            "🟡 *GoldenLine Signal AI Pro*\nPilih pair untuk mula analisis 👇",
+            text="📊 *Golden Line Pro*\n\nPilih pasangan (pair) untuk analisis signal real-time di bawah 👇",
             parse_mode="Markdown",
             reply_markup=InlineKeyboardMarkup(submenu)
         )
 
-    # --- Pair Menu ---
-    elif data.startswith("pair_"):
-        pair = data.split("_")[1].upper()
-        submenu = [
-            [InlineKeyboardButton("⏱ M15", callback_data=f"{pair}_M15")],
-            [InlineKeyboardButton("⏱ M30", callback_data=f"{pair}_M30")],
-            [InlineKeyboardButton("⏱ H1", callback_data=f"{pair}_H1")],
-            [InlineKeyboardButton("⬅️ Back", callback_data="goldenline_menu")]
+    # === SUBMENU XAU/USD ===
+    elif data == "xauusd":
+        tfmenu = [
+            [InlineKeyboardButton("🕒 M15", callback_data="xauusd_m15"),
+             InlineKeyboardButton("🕕 M30", callback_data="xauusd_m30"),
+             InlineKeyboardButton("🕐 H1", callback_data="xauusd_h1")],
+            [InlineKeyboardButton("🏠 Back", callback_data="goldenline_menu")]
         ]
         await query.edit_message_text(
-            f"📊 *Selected Pair:* {pair}\n\nPilih timeframe untuk signal analisis 👇",
+            text="🪙 *Selected Pair:* XAU/USD\n\n"
+                 "Sila pilih timeframe untuk analisis signal:",
             parse_mode="Markdown",
-            reply_markup=InlineKeyboardMarkup(submenu)
+            reply_markup=InlineKeyboardMarkup(tfmenu)
         )
 
-    # --- Timeframe selected ---
-    elif "_" in data:
-        pair, tf = data.split("_")
-        chat_id = str(query.message.chat_id)
-        users[chat_id] = {"pair": pair, "tf": tf, "active": True}
-        save_active_users(users)
+    # === SUBMENU WTI ===
+    elif data == "wti":
+        tfmenu = [
+            [InlineKeyboardButton("🕒 M15", callback_data="wti_m15"),
+             InlineKeyboardButton("🕕 M30", callback_data="wti_m30"),
+             InlineKeyboardButton("🕐 H1", callback_data="wti_h1")],
+            [InlineKeyboardButton("🏠 Back", callback_data="goldenline_menu")]
+        ]
+        await query.edit_message_text(
+            text="🛢️ *Selected Pair:* WTI\n\n"
+                 "Sila pilih timeframe untuk analisis signal:",
+            parse_mode="Markdown",
+            reply_markup=InlineKeyboardMarkup(tfmenu)
+        )
+
+    # === TIMEFRAME HANDLER ===
+    elif data in ["xauusd_m15", "xauusd_m30", "xauusd_h1",
+                  "wti_m15", "wti_m30", "wti_h1"]:
+
+        pair = "XAU/USD" if "xauusd" in data else "WTI"
+        tf = data.split("_")[1].upper()
 
         await query.edit_message_text(
-            f"✅ *Signal Active Mode ON*\nPair: {pair}\nTimeframe: {tf}\n\nMenunggu signal real-time...",
+            text=f"✅ *Signal Active Mode ON*\n\n"
+                 f"📍 Pair: {pair}\n🕒 Timeframe: {tf}\n\n"
+                 f"Menunggu signal real-time dari sistem Golden Line AI Pro...\n\n"
+                 f"Tekan 'Stop Signal' untuk hentikan notifikasi semasa.",
             parse_mode="Markdown",
             reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("❌ Stop Signal", callback_data="stop_signal")],
-                [InlineKeyboardButton("🏠 Home", callback_data="back_main")]
+                [InlineKeyboardButton("❌ Stop Signal", callback_data="stop_signal")]
             ])
         )
 
+    # === STOP SIGNAL ===
     elif data == "stop_signal":
-        chat_id = str(query.message.chat_id)
-        users.pop(chat_id, None)
-        save_active_users(users)
         await query.edit_message_text(
-            "🛑 Signal dihentikan.\nKembali ke menu utama untuk sambung semula.",
-            parse_mode="Markdown",
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🏠 Home", callback_data="back_main")]])
+            text="🛑 *Signal Mode Deactivated*\n\n"
+                 "Anda telah hentikan signal real-time dari Golden Line AI Pro.",
+            parse_mode="Markdown"
         )
 
+    # === MAPPING PRO ===
+    elif data == "mapping_pro":
+        await query.edit_message_text(
+            text="🧭 *Mapping Pro*\n\nFungsi analisis struktur pasaran akan datang 🔍",
+            parse_mode="Markdown"
+        )
+
+    # === EDUCATION ===
+    elif data == "education":
+        await query.edit_message_text(
+            text="🎓 *Education*\n\nAkses modul pembelajaran lengkap Golden Line AI Pro 📘",
+            parse_mode="Markdown"
+        )
+
+    # === SUBSCRIPTION ===
+    elif data == "subscription":
+        await query.edit_message_text(
+            text="📘 *Subscription*\n\nMaklumat tentang pelan langganan & pakej sokongan pelanggan 💎",
+            parse_mode="Markdown"
+        )
+
+    # === TUTORIAL ===
+    elif data == "tutorial":
+        await query.edit_message_text(
+            text="📚 *Tutorial*\n\nLangkah-langkah & panduan penggunaan sistem Golden Line AI Pro 🧠",
+            parse_mode="Markdown"
+        )
+
+    # === LANGUAGE ===
+    elif data == "language":
+        await query.edit_message_text(
+            text="🌐 *Language*\n\nPilih bahasa yang anda ingin gunakan untuk sistem ini 🌏",
+            parse_mode="Markdown"
+        )
+
+    # === BACK KE MENU UTAMA ===
     elif data == "back_main":
         await start(update, context)
 
-# === RUN BOT ===
-if __name__ == "__main__":
-    app = ApplicationBuilder().token(TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CallbackQueryHandler(button_callback))
-    app.run_polling()
+
+# === RUN APP ===
+app = ApplicationBuilder().token(TOKEN).build()
+app.add_handler(CommandHandler("start", start))
+app.add_handler(CallbackQueryHandler(button_callback))
+app.run_polling()
